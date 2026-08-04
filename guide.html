@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>使い方ガイド｜東灘区 災害時 医療機関マップ</title>
+<style>
+:root{--navy:#1F3A5F;--red:#D9432C;--green:#2E8B57;--yellow:#E8A013;--gray:#9AA0A6}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;color:#222;line-height:1.75;background:#f6f7f9}
+.wrap{max-width:640px;margin:0 auto;padding:0 16px 40px}
+header{background:var(--navy);color:#fff;text-align:center;padding:28px 16px 22px}
+header h1{font-size:1.35em;letter-spacing:.05em}
+header p{font-size:.8em;opacity:.85;margin-top:6px}
+.card{background:#fff;border-radius:14px;padding:18px 16px;margin-top:16px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.tag{display:inline-block;font-size:.75em;font-weight:700;padding:2px 10px;border-radius:99px;color:#fff;margin-bottom:6px}
+.card h2{font-size:1.1em;margin-bottom:6px}
+.card p{font-size:.9em;color:#444}
+.btn{display:block;text-align:center;color:#fff;text-decoration:none;font-weight:700;font-size:1.05em;padding:14px;border-radius:10px;margin-top:12px}
+.b-navy{background:var(--navy)}.b-red{background:var(--red)}.b-green{background:var(--green)}
+.legend{display:flex;flex-wrap:wrap;gap:10px 18px;font-size:.85em}
+.legend span::before{content:"●";margin-right:5px}
+.l-g::before{color:var(--green)}.l-y::before{color:var(--yellow)}.l-r::before{color:var(--red)}.l-n::before{color:var(--gray)}
+details{border-top:1px solid #eee;padding:10px 2px}
+details:first-of-type{border-top:none}
+summary{font-weight:700;font-size:.92em;cursor:pointer;padding:4px 0}
+details p{font-size:.88em;padding:6px 2px 2px;color:#444}
+iframe{width:100%;height:420px;border:none;border-radius:10px;margin-top:12px;background:#eee}
+footer{text-align:center;font-size:.75em;color:#888;margin-top:26px}
+.note{font-size:.78em;color:#777;margin-top:8px}
+</style>
+</head>
+<body>
+<header>
+  <h1>東灘区 災害時 医療機関マップ</h1>
+  <p>発災時に「どの医療機関・薬局が動いているか」をスマホの地図で共有する仕組みです（三師会・試験運用）</p>
+</header>
+<div class="wrap">
+
+<div class="card">
+  <span class="tag" style="background:var(--navy)">STEP 1｜いま（平時に1回・2分）</span>
+  <h2>事前登録をお願いします</h2>
+  <p>医療機関名（届出上の正式名称）・住所・電話・災害時責任者を入力すると、地図にピンが立ちます。内容が変わったら同じ機関名で再送信すれば上書きされます。</p>
+  <a class="btn b-navy" href="https://docs.google.com/forms/d/e/1FAIpQLScTU0EZXw5gmAE5UevqhnnQO7sRRKFD3yX0BTPz5v2tHj8IiA/viewform">事前登録フォームを開く</a>
+</div>
+
+<div class="card">
+  <span class="tag" style="background:var(--red)">STEP 2｜発災時（15秒・状況が変わるたび）</span>
+  <h2>稼働状況を報告してください</h2>
+  <p>機関名と稼働状況（診療可／一部制限／診療不可）だけでOK。詳細は落ち着いてからの追加報告で構いません（空欄の項目は前回の報告内容が自動で引き継がれます）。</p>
+  <a class="btn b-red" href="https://docs.google.com/forms/d/e/1FAIpQLSfueLIfe8woAkbBTNl3MrSREa5Vx7eUntJJuP-u-F6yw-mIeg/viewform">稼働状況を報告する</a>
+</div>
+
+<div class="card">
+  <span class="tag" style="background:var(--green)">いつでも｜ブックマーク推奨</span>
+  <h2>東灘区全体の状況が一目で分かります</h2>
+  <p>報告から約1分で地図に自動反映。救護所（区の候補6小学校）は大きい二重丸で表示され、「診療可」＝開設中を意味します。</p>
+  <div class="legend">
+    <span class="l-g">診療可</span><span class="l-y">一部制限</span><span class="l-r">診療不可</span><span class="l-n">未報告（状況不明）</span>
+  </div>
+  <iframe src="https://hnada2265.github.io/higashinada-med-map/" title="稼働状況マップ" loading="lazy"></iframe>
+  <a class="btn b-green" href="https://hnada2265.github.io/higashinada-med-map/">地図を大きく開く</a>
+</div>
+
+<div class="card">
+  <h2 style="margin-bottom:8px">よくある質問</h2>
+  <details>
+    <summary>送信を間違えた／内容を直したい</summary>
+    <p>同じ機関名でもう一度送信してください（最新の回答が採用されます）。送信完了画面の「回答を編集」からも修正できます。</p>
+  </details>
+  <details>
+    <summary>報告のたびに全部入力するのですか？</summary>
+    <p>いいえ。機関名と稼働状況だけで送信できます。空欄にした項目は前回の報告内容が自動で引き継がれます。</p>
+  </details>
+  <details>
+    <summary>患者さんの情報は含まれませんか？</summary>
+    <p>含まれません。扱うのは機関名・住所・電話・稼働状況など、機関の公開情報のみです。</p>
+  </details>
+  <details>
+    <summary>報告しないとどうなりますか？</summary>
+    <p>地図上でグレーの「未報告（状況不明）」として表示されます。これ自体が「連絡がつかない可能性がある」という情報になります。</p>
+  </details>
+  <details>
+    <summary>訓練はありますか？</summary>
+    <p>年1回程度の入力訓練を予定しています（訓練後は地図をリセットします）。</p>
+  </details>
+  <details>
+    <summary>メールアドレスは何に使いますか？</summary>
+    <p>なりすまし防止のための記録用です。公開されることはありません。</p>
+  </details>
+</div>
+
+<p class="note">ご不明点・掲載内容の修正依頼は各会事務局または管理者（東灘区医師会・森田）まで。</p>
+<footer>東灘区三師会 災害サテライトグループ（試験運用）／管理：東灘区医師会</footer>
+</div>
+</body>
+</html>
