@@ -40,6 +40,10 @@
     font-size: 12px; cursor: pointer;
   }
   #filters button.on { background: #1a3a5c; color: #fff; border-color: #1a3a5c; }
+  #filters input {
+    flex: 1; min-width: 11em; border: 1px solid #ccc; border-radius: 12px;
+    padding: 3px 10px; font-size: 12px;
+  }
   .legend {
     background: #fff; padding: 8px 10px; border-radius: 6px; box-shadow: 0 1px 4px rgba(0,0,0,.3);
     font-size: 12px; line-height: 1.8;
@@ -134,9 +138,19 @@ legend.addTo(map);
 let markers = [];
 let rows = [];
 let typeFilter = "すべて";
+let searchQ = ""; // 検索ボックスの文字列（診療科・機関名・備考を横断）
 let didFitBounds = false; // 初回読み込み時に全ピンが収まるよう表示範囲を自動調整
 
 function statusOf(r) { return STATUS[r[6]] ? r[6] : "未回答"; }
+
+// 検索用の正規化（全角/半角・大文字小文字・空白・中黒のゆれを吸収）
+function normJS(s) { return String(s || "").normalize("NFKC").toLowerCase().replace(/[\s・･]/g, ""); }
+// 機関名(0)・種別(1)・備考(9)・診療科(11) を横断して部分一致
+function matchesSearch(r) {
+  if (!searchQ.trim()) return true;
+  const hay = normJS(r[0]) + "|" + normJS(r[1]) + "|" + normJS(r[9]) + "|" + normJS(r[11]);
+  return hay.includes(normJS(searchQ));
+}
 
 function render() {
   markers.forEach(m => map.removeLayer(m));
@@ -149,6 +163,7 @@ function render() {
   const spotCount = {}, spotSeen = {};
   rows.forEach(r => {
     if (typeFilter !== "すべて" && r[1] !== typeFilter) return;
+    if (!matchesSearch(r)) return;
     const la = r[3], ln = r[4];
     if (String(la).trim() !== "" && String(ln).trim() !== "" && isFinite(+la) && isFinite(+ln)) {
       const key = (+la).toFixed(5) + "," + (+ln).toFixed(5);
@@ -157,8 +172,9 @@ function render() {
   });
 
   rows.forEach(r => {
-    const [name, type, addr, lat, lng, tel, , damage, lifeline, note, updated] = r;
+    const [name, type, addr, lat, lng, tel, , damage, lifeline, note, updated, depts] = r;
     if (typeFilter !== "すべて" && type !== typeFilter) return;
+    if (!matchesSearch(r)) return;
     const st = statusOf(r);
     counts[st]++;
     if (String(lat).trim() !== "" && String(lng).trim() !== "" && isFinite(+lat) && isFinite(+lng)) {
@@ -184,6 +200,7 @@ function render() {
       mk.bindPopup(`
         <div class="popup-name">${name}</div>
         <div class="popup-row"><span class="status-badge" style="background:${STATUS[st].hex}">${st}</span> <b>${type}</b></div>
+        ${depts ? `<div class="popup-row">🩺 ${depts}</div>` : ""}
         <div class="popup-row">📍 ${addr || ""}</div>
         <div class="popup-row">📞 ${tel || "-"}</div>
         <div class="popup-row">🏚 建物被害: ${damage || "-"} ／ ライフライン: ${lifeline || "-"}</div>
@@ -194,7 +211,7 @@ function render() {
       const item = document.createElement("div");
       item.className = "item";
       item.innerHTML = `<div class="name"><span class="dot" style="background:${STATUS[st].hex}"></span>${type === "救護所" ? "◎ " : ""}${name}</div>
-        <div class="meta">${type} ｜ ${st} ｜ 更新: ${updated || "未報告"}</div>`;
+        <div class="meta">${type}${depts ? "・" + (depts.length > 16 ? depts.slice(0, 16) + "…" : depts) : ""} ｜ ${st} ｜ 更新: ${updated || "未報告"}</div>`;
       item.onclick = () => { map.setView([plat, plng], 16); mk.openPopup(); };
       list.appendChild(item);
     }
@@ -223,6 +240,13 @@ function renderFilters() {
     b.onclick = () => { typeFilter = k; renderFilters(); render(); };
     el.appendChild(b);
   });
+  // 検索ボックス（診療科・機関名・備考を横断。入力のたび絞り込み）
+  const inp = document.createElement("input");
+  inp.type = "search";
+  inp.placeholder = "🔍 診療科・機関名で検索（例: 内科）";
+  inp.value = searchQ;
+  inp.oninput = () => { searchQ = inp.value; render(); };
+  el.appendChild(inp);
 }
 
 // 簡易CSVパーサ（ダブルクォート対応）
