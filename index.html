@@ -145,20 +145,40 @@ function render() {
   list.innerHTML = "";
   const counts = { "診療可": 0, "一部制限": 0, "診療不可": 0, "未回答": 0 };
 
+  // 同一ビル対策: 同一座標（小数5桁≒1m単位で同じ地点）のピンは小さな円周上に並べて重なりを防ぐ
+  const spotCount = {}, spotSeen = {};
+  rows.forEach(r => {
+    if (typeFilter !== "すべて" && r[1] !== typeFilter) return;
+    const la = r[3], ln = r[4];
+    if (String(la).trim() !== "" && String(ln).trim() !== "" && isFinite(+la) && isFinite(+ln)) {
+      const key = (+la).toFixed(5) + "," + (+ln).toFixed(5);
+      spotCount[key] = (spotCount[key] || 0) + 1;
+    }
+  });
+
   rows.forEach(r => {
     const [name, type, addr, lat, lng, tel, , damage, lifeline, note, updated] = r;
     if (typeFilter !== "すべて" && type !== typeFilter) return;
     const st = statusOf(r);
     counts[st]++;
     if (String(lat).trim() !== "" && String(lng).trim() !== "" && isFinite(+lat) && isFinite(+lng)) {
+      // 同一地点が複数あれば約20mの円周上へ等間隔に展開（1件だけならそのまま）
+      let plat = +lat, plng = +lng;
+      const spotKey = plat.toFixed(5) + "," + plng.toFixed(5);
+      if (spotCount[spotKey] > 1) {
+        const i = (spotSeen[spotKey] = (spotSeen[spotKey] || 0) + 1) - 1;
+        const n = spotCount[spotKey], R = 0.00018;
+        plat += R * Math.cos(2 * Math.PI * i / n);
+        plng += R * Math.sin(2 * Math.PI * i / n) / Math.cos(plat * Math.PI / 180);
+      }
       const isAid = type === "救護所";
       if (isAid) {
         // 救護所は外側リング付きの大きい二重丸で強調
-        markers.push(L.circleMarker([+lat, +lng], {
+        markers.push(L.circleMarker([plat, plng], {
           radius: 17, fill: false, color: STATUS[st].hex, weight: 2.5,
         }).addTo(map));
       }
-      const mk = L.circleMarker([+lat, +lng], {
+      const mk = L.circleMarker([plat, plng], {
         radius: isAid ? 12 : 9, color: "#fff", weight: 2, fillColor: STATUS[st].hex, fillOpacity: 0.95,
       }).addTo(map);
       mk.bindPopup(`
@@ -175,7 +195,7 @@ function render() {
       item.className = "item";
       item.innerHTML = `<div class="name"><span class="dot" style="background:${STATUS[st].hex}"></span>${type === "救護所" ? "◎ " : ""}${name}</div>
         <div class="meta">${type} ｜ ${st} ｜ 更新: ${updated || "未報告"}</div>`;
-      item.onclick = () => { map.setView([+lat, +lng], 16); mk.openPopup(); };
+      item.onclick = () => { map.setView([plat, plng], 16); mk.openPopup(); };
       list.appendChild(item);
     }
   });
