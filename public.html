@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>東灘区 医療機関 稼働状況マップ</title>
+<title>【市民向け】東灘区 医療機関 稼働状況マップ</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
@@ -66,10 +66,18 @@
 <body>
 <div id="app">
   <header>
-    <h1>🏥 東灘区 医療機関 稼働状況マップ</h1>
+    <h1>🏥 東灘区 災害時 医療機関マップ（市民向け）</h1>
     <div id="counts"></div>
-    <div class="updated"><span id="updated"></span><a class="pub-link" href="public.html" target="_blank" rel="noopener">👥 市民向けマップを開く ↗</a></div>
+    <div class="updated"><span id="updated"></span><a class="pub-link" href="#" id="aboutLink">ℹ️ この地図について</a></div>
   </header>
+  <div id="about" style="display:none; background:#fffbe6; border-bottom:1px solid #e6d98a; padding:8px 14px; font-size:12px; line-height:1.6;">
+    <b>この地図は、東灘区の医療機関・歯科・薬局が災害時に自ら報告した「診療できるかどうか」を表示するものです。</b><br>
+    ・🟢診療可 🟡一部制限 🔴診療不可 ⚪状況不明（報告なし）。<b>災害が起きていない平常時は全て⚪です。</b><br>
+    ・状況は刻々と変わります。<b>受診の前に必ず電話で確認</b>してください。緊急の場合は119番へ。<br>
+    ・◎の大きい印は区の救護所候補（小学校）で、🟢は開設中を意味します。<br>
+    ・掲載は各機関の申し出によるもので、区内の全機関が載っているわけではありません。
+    <a href="#" id="aboutClose" style="margin-left:8px">閉じる</a>
+  </div>
   <div id="main">
     <div id="map" style="position:relative;">
       <div class="banner" id="banner">⏳ データ取得中…</div>
@@ -86,21 +94,21 @@
 // 設定：Googleスプレッドシートを「ウェブに公開」したCSVのURLを
 // ここに貼ると実データモードになる。空ならデモデータを表示。
 // 例: https://docs.google.com/spreadsheets/d/e/2PACX-.../pub?gid=0&single=true&output=csv
-const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vROg9N7bsIInWqzB4Hjolffg7ytquKaVMsDd_B0JaDsCxmWj3lvTVLleQjvLCKq8Af2PrzyvUCCo5wM/pub?gid=650763468&single=true&output=csv";
+const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vROg9N7bsIInWqzB4Hjolffg7ytquKaVMsDd_B0JaDsCxmWj3lvTVLleQjvLCKq8Af2PrzyvUCCo5wM/pub?gid=1088796182&single=true&output=csv";
 const REFRESH_SEC = 60; // 実データモード時の自動更新間隔（秒）
 // ============================================================
 
 // 期待するシート列（フォーム→整形シートの列順）:
-// 機関名, 種別, 住所, 緯度, 経度, 電話, 稼働状況, 建物被害, ライフライン, 備考, 更新日時, 診療科, 市民公開
-// 市民公開: 掲載する / 掲載しない（事前登録フォームの回答。未回答＝掲載する）。
-// 市民向け地図（public.html）は別シート「マップ用_市民」を読む＝このページは三師会・行政向け（全項目表示）
+// 【市民向け】読むのはシート「マップ用_市民」（事前登録で「掲載しない」を選んだ機関は含まれない・公開項目のみ）:
+// 機関名, 種別, 住所, 緯度, 経度, 電話, 稼働状況, 更新日時, 診療科
+// 建物被害・ライフライン・備考は三師会・行政向け（index.html）にしか無い
 // 稼働状況: 診療可 / 一部制限 / 診療不可 /（空欄=未回答）
 
 const STATUS = {
   "診療可":   { color: "var(--green)",  hex: "#2e9e5b", label: "診療可" },
   "一部制限": { color: "var(--yellow)", hex: "#e6a817", label: "一部制限" },
   "診療不可": { color: "var(--red)",    hex: "#d9432f", label: "診療不可" },
-  "未回答":   { color: "var(--gray)",   hex: "#9aa0a6", label: "未回答(状況不明)" },
+  "未回答":   { color: "var(--gray)",   hex: "#9aa0a6", label: "状況不明(報告なし)" },
 };
 
 // デモデータ（すべて架空。座標は東灘区周辺に散らしたダミー）
@@ -148,10 +156,10 @@ function statusOf(r) { return STATUS[r[6]] ? r[6] : "未回答"; }
 
 // 検索用の正規化（全角/半角・大文字小文字・空白・中黒のゆれを吸収）
 function normJS(s) { return String(s || "").normalize("NFKC").toLowerCase().replace(/[\s・･]/g, ""); }
-// 機関名(0)・種別(1)・備考(9)・診療科(11) を横断して部分一致
+// 機関名(0)・種別(1)・診療科(8) を横断して部分一致
 function matchesSearch(r) {
   if (!searchQ.trim()) return true;
-  const hay = normJS(r[0]) + "|" + normJS(r[1]) + "|" + normJS(r[9]) + "|" + normJS(r[11]);
+  const hay = normJS(r[0]) + "|" + normJS(r[1]) + "|" + normJS(r[8]);
   return hay.includes(normJS(searchQ));
 }
 
@@ -175,8 +183,7 @@ function render() {
   });
 
   rows.forEach(r => {
-    const [name, type, addr, lat, lng, tel, , damage, lifeline, note, updated, depts, kokai] = r;
-    const pubLabel = kokai === "掲載しない" ? "非掲載（三師会・行政向けのみ）" : "掲載";
+    const [name, type, addr, lat, lng, tel, , updated, depts] = r;
     if (typeFilter !== "すべて" && type !== typeFilter) return;
     if (!matchesSearch(r)) return;
     const st = statusOf(r);
@@ -207,16 +214,13 @@ function render() {
         ${depts ? `<div class="popup-row">🩺 ${depts}</div>` : ""}
         <div class="popup-row">📍 ${addr || ""}</div>
         <div class="popup-row">📞 ${tel || "-"}</div>
-        <div class="popup-row">🏚 建物被害: ${damage || "-"} ／ ライフライン: ${lifeline || "-"}</div>
-        ${note ? `<div class="popup-row">📝 ${note}</div>` : ""}
-        <div class="popup-row" style="color:#666">👥 市民向けマップ: ${pubLabel}</div>
-        <div class="popup-row" style="color:#888">更新: ${updated || "未報告"}</div>
+        <div class="popup-row" style="color:#888">更新: ${updated || "報告なし"}</div>
       `);
       markers.push(mk);
       const item = document.createElement("div");
       item.className = "item";
       item.innerHTML = `<div class="name"><span class="dot" style="background:${STATUS[st].hex}"></span>${type === "救護所" ? "◎ " : ""}${name}</div>
-        <div class="meta">${type}${depts ? "・" + (depts.length > 16 ? depts.slice(0, 16) + "…" : depts) : ""} ｜ ${st} ｜ 更新: ${updated || "未報告"}${kokai === "掲載しない" ? " ｜ 👥市民向け非掲載" : ""}</div>`;
+        <div class="meta">${type}${depts ? "・" + (depts.length > 16 ? depts.slice(0, 16) + "…" : depts) : ""} ｜ ${st} ｜ 更新: ${updated || "報告なし"}</div>`;
       item.onclick = () => { map.setView([plat, plng], 16); mk.openPopup(); };
       list.appendChild(item);
     }
@@ -309,6 +313,9 @@ async function load() {
 
 renderFilters();
 load();
+// 「この地図について」の開閉
+document.getElementById("aboutLink").onclick = e => { e.preventDefault(); const a = document.getElementById("about"); a.style.display = a.style.display === "none" ? "" : "none"; setTimeout(() => map.invalidateSize(), 50); };
+document.getElementById("aboutClose").onclick = e => { e.preventDefault(); document.getElementById("about").style.display = "none"; setTimeout(() => map.invalidateSize(), 50); };
 // flexレイアウト内でLeafletが初期サイズを誤認するのを防ぐ
 window.addEventListener("load", () => setTimeout(() => map.invalidateSize(), 100));
 new ResizeObserver(() => map.invalidateSize()).observe(document.getElementById("map"));
