@@ -176,7 +176,7 @@ function render() {
 
   rows.forEach(r => {
     const [name, type, addr, lat, lng, tel, , damage, lifeline, note, updated, depts, kokai] = r;
-    const pubLabel = kokai === "掲載しない" ? "非掲載（三師会・行政向けのみ）" : "掲載";
+    const pubLabel = kokai === "掲載しない" ? "非掲載（この地図のみ）" : "掲載（機関名・住所・電話・診療科・稼働状況のみ。建物被害・ライフライン・備考は出ません）";
     if (typeFilter !== "すべて" && type !== typeFilter) return;
     if (!matchesSearch(r)) return;
     const st = statusOf(r);

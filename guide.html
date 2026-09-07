@@ -28,6 +28,11 @@ details p{font-size:.88em;padding:6px 2px 2px;color:#444}
 iframe{width:100%;height:420px;border:none;border-radius:10px;margin-top:12px;background:#eee}
 footer{text-align:center;font-size:.75em;color:#888;margin-top:26px}
 .note{font-size:.78em;color:#777;margin-top:8px}
+table.scope{border-collapse:collapse;width:100%;font-size:.85em;margin-top:10px}
+table.scope th,table.scope td{border:1px solid #ddd;padding:6px 6px;text-align:center;vertical-align:middle}
+table.scope th{background:#eef2f7;font-weight:700}
+table.scope td:first-child{text-align:left}
+.ok{color:var(--green);font-weight:700}.ng{color:var(--red);font-weight:700}
 </style>
 </head>
 <body>
@@ -61,6 +66,22 @@ footer{text-align:center;font-size:.75em;color:#888;margin-top:26px}
   <iframe src="https://hnada2265.github.io/higashinada-med-map/" title="稼働状況マップ" loading="lazy"></iframe>
   <a class="btn b-green" href="https://hnada2265.github.io/higashinada-med-map/">地図を大きく開く</a>
   <p class="note">上の地図は三師会・行政向け（建物被害・ライフライン・備考まで表示）。市民に案内する一般公開用は別ページです：<a href="https://hnada2265.github.io/higashinada-med-map/public.html">市民向けマップ</a>（掲載の有無を自院で確認できます）</p>
+</div>
+
+<div class="card">
+  <span class="tag" style="background:#555">地図は2種類｜どこまで公開されるかの早見表</span>
+  <h2>三師会・行政向けと、市民向けで表示が違います</h2>
+  <p>三師会・行政向け＝このページの地図（URLを知っている人が閲覧可）。市民向け＝<a href="https://hnada2265.github.io/higashinada-med-map/public.html">市民向けマップ</a>（区民に広報する一般公開用）。</p>
+  <table class="scope">
+    <tr><th>項目</th><th>三師会・行政向け</th><th>市民向け</th></tr>
+    <tr><td>機関名・種別・住所・電話・診療科</td><td class="ok">○</td><td class="ok">○</td></tr>
+    <tr><td>稼働状況（診療可／一部制限／診療不可）・更新時刻</td><td class="ok">○</td><td class="ok">○</td></tr>
+    <tr><td>建物被害</td><td class="ok">○</td><td class="ng">×</td></tr>
+    <tr><td>使用可能なライフライン</td><td class="ok">○</td><td class="ng">×</td></tr>
+    <tr><td>備考（スタッフ状況・救護所への申し送りなど）</td><td class="ok">○</td><td class="ng">×</td></tr>
+    <tr><td>災害時責任者・提供可能な機能・メールアドレス</td><td class="ng">×</td><td class="ng">×</td></tr>
+  </table>
+  <p class="note">※ 責任者・提供可能な機能・メールアドレスは地図には出ず、集計表（医師会管理）で管理者だけが見ます。<br>※ 市民向けに載せたくない機関は、事前登録の「市民向けマップへの掲載」で「掲載しない」を選んでください（未回答＝掲載する。後から再送信で変更可）。市民向けの地図で自院の表示を確認できます。</p>
 </div>
 
 <div class="card">
