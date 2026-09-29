@@ -142,6 +142,7 @@ let markers = [];
 let rows = [];
 let typeFilter = "すべて";
 let searchQ = ""; // 検索ボックスの文字列（診療科・機関名・備考を横断）
+let fitPts = null; // 自動ズーム待ちのピン座標（tryFit参照）
 let didFitBounds = false; // 初回読み込み時に全ピンが収まるよう表示範囲を自動調整
 
 function statusOf(r) { return STATUS[r[6]] ? r[6] : "未回答"; }
@@ -228,9 +229,8 @@ function render() {
 
   // 初回のみ、全ピン（六甲アイランドの救護所含む）が収まる範囲へ自動ズーム
   if (!didFitBounds && markers.length) {
-    const pts = markers.map(m => m.getLatLng());
-    map.fitBounds(L.latLngBounds(pts).pad(0.12));
-    didFitBounds = true;
+    fitPts = markers.map(m => m.getLatLng());
+    tryFit();
   }
 }
 
@@ -311,7 +311,16 @@ renderFilters();
 load();
 // flexレイアウト内でLeafletが初期サイズを誤認するのを防ぐ
 window.addEventListener("load", () => setTimeout(() => map.invalidateSize(), 100));
-new ResizeObserver(() => map.invalidateSize()).observe(document.getElementById("map"));
+// 画面に出る前（裏タブ・LINE内ブラウザの読み込み中など）に地図の幅が0だと、全ピンに合わせる計算が
+// 世界全体の縮尺になって灰色の地図になる。幅が付いてから合わせ直す（2026-09-29）
+function tryFit() {
+  if (didFitBounds || !fitPts) return;
+  const sz = map.getSize();
+  if (sz.x < 50 || sz.y < 50) return;
+  map.fitBounds(L.latLngBounds(fitPts).pad(0.12));
+  didFitBounds = true;
+}
+new ResizeObserver(() => { map.invalidateSize(); tryFit(); }).observe(document.getElementById("map"));
 if (SHEET_CSV_URL) setInterval(load, REFRESH_SEC * 1000);
 </script>
 </body>
